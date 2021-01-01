@@ -7,52 +7,57 @@
 #include "Arduino.h"
 #include "Colors.h"
 
-int* Colors::hsbToRgb(int hue, float saturation, float brightness) {
-    int rgb[3];
+uint32_t Colors::hsbToRgb(uint16_t h, uint8_t s, uint8_t b) {
 
-    int hi = hue / 60;
-    float f = ((float)hue) / 60 - hi;
-    float p = brightness * (1 - saturation);
-    float q = brightness * (1 - saturation * f);
-    float t = brightness * (1 - saturation * (1 - f));
+    uint32_t c = s * b / 255;
+    uint32_t x = c * (60 - abs(h % 120 - 60)) / 255;
+    uint32_t m = b - c;
+    c += m;
+    x += m;
 
+    uint8_t hi = h / 60;
     switch (hi)
     {
         case 0:
         case 6:
-            rgb[0] = brightness * 255;
-            rgb[1] = t * 255;
-            rgb[2] = p * 255;
-            break;
+            return c << 16 | x << 8 | m;
         case 1:
-            rgb[0] = q * 255;
-            rgb[1] = brightness * 255;
-            rgb[2] = p * 255;
-            break;
+            return x << 16 | c << 8 | m;
         case 2:
-            rgb[0] = p * 255;
-            rgb[1] = brightness * 255;
-            rgb[2] = t * 255;
-            break;
+            return m << 16 | c << 8 | x;
         case 3:
-            rgb[0] = p * 255;
-            rgb[1] = q * 255;
-            rgb[2] = brightness * 255;
-            break;
+            return m << 16 | x << 8 | c;
         case 4:
-            rgb[0] = t * 255;
-            rgb[1] = p * 255;
-            rgb[2] = brightness * 255;
-            break;
+            return x << 16 | m << 8 | c;
         case 5:
-            rgb[0] = brightness * 255;
-            rgb[1] = p * 255;
-            rgb[2] = q * 255;
-            break;
-
+            return c << 16 | m << 8 | x;
         default:
-            break;
+            return 0;
+    }
+}
+
+uint32_t Colors::hueToRgb(uint16_t h) {
+    
+    uint32_t t = (h % 60) * 255 / 60;
+    uint32_t q = 255 - t;
+
+    uint16_t hi = h / 60;
+    switch (hi) {
+        case 0:
+        case 6:
+            return t << 8  | 0xFF0000;
+        case 1:
+            return q << 16 | 0x00FF00;
+        case 2:
+            return t       | 0x00FF00;
+        case 3:
+            return q << 8  | 0x0000FF;
+        case 4:
+            return t << 16 | 0x0000FF;
+        case 5:
+            return q       | 0xFF0000;
+        default:
+            return 0;
     }
 
-    return rgb;
 }
